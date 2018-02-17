@@ -20,15 +20,6 @@
  * THE SOFTWARE.
  */
 
-/**
- * @file
- * Demuxing and decoding example.
- *
- * Show how to use the libavformat and libavcodec API to demux and
- * decode audio and video data.
- * @example demuxing_decoding.c
- */
-
 #include "FFmpegDemuxer.h"
 #include <fstream>
 #include <iostream>
@@ -114,8 +105,7 @@ FFmpegDemuxer::stripStream(const string& filename)
       AVCodecParameters *in_codecpar = in_stream->codecpar;
 
       if (   in_codecpar->codec_type != AVMEDIA_TYPE_AUDIO
-          && in_codecpar->codec_type != AVMEDIA_TYPE_VIDEO
-         ) {
+          && in_codecpar->codec_type != AVMEDIA_TYPE_VIDEO) {
           stream_mapping[i] = -1;
           cout << "ignore non auido/video stream " << i << ": type=" << in_codecpar->codec_type << endl;
           continue;
@@ -227,7 +217,7 @@ FFmpegDemuxer::stripStream(const string& filename)
 }
 
 int
-FFmpegDemuxer::demux(const string& src_filename)
+FFmpegDemuxer::mux(const string& videoFilename, const string& audioFilename)
 {
     return 0;
 }

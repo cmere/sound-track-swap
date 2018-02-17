@@ -9,7 +9,7 @@ namespace Swaper {
   {
     public:
       static int stripStream(const std::string& filename);
-      static int demux(const std::string& filename);
+      static int mux(const std::string& videoFilename, const std::string& audioFilename);
 
     private:
 
