@@ -86,10 +86,10 @@ FFmpegClass<AVPacket>::FFmpegClass(AVPacket* t) {
     t_.reset(t, [](AVPacket* p) { av_packet_unref(p); });
 }
 
-pair<FFmpegAVFormatContext, AVMediaType>
-openMediaFile_(const string& filename)
+pair<FFmpegAVFormatContext, int>
+openVideoMediaFile_(const string& filename)
 {
-    static auto InvalidRet = make_pair(FFmpegAVFormatContext(), AVMEDIA_TYPE_UNKNOWN);
+    static auto InvalidRet = make_pair(FFmpegAVFormatContext(), -1);
 
     AVFormatContext* fmtctx = nullptr;
     if (avformat_open_input(&fmtctx, filename.c_str(), 0, 0) < 0) {
@@ -103,6 +103,17 @@ openMediaFile_(const string& filename)
     }
 
     unsigned int numOfStreams = fmtctx->nb_streams;
+    for (unsigned int i = 0; i < numOfStreams; ++i) {
+        if (fmtctx->streams) {
+            AVStream* stream = fmtctx->streams[i];
+            if (stream && stream->codecpar) {
+                if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO ) {
+                    return make_pair(FFmpegAVFormatContext(fmtctx), i);
+                }
+            }
+        }
+    }
+
     if (numOfStreams != 1) {
         cout << "input file must has exactly one stream: " << filename << " " << numOfStreams << endl;
         return InvalidRet;
@@ -117,7 +128,38 @@ openMediaFile_(const string& filename)
     return InvalidRet;
 }
 
-int writeFrame_(AVFormatContext *ic, AVFormatContext *oc, int outStreamIdx, int64_t& pts)
+pair<FFmpegAVFormatContext, int>
+openAudioMediaFile_(const string& filename)
+{
+    static auto InvalidRet = make_pair(FFmpegAVFormatContext(), -1);
+
+    AVFormatContext* fmtctx = nullptr;
+    if (avformat_open_input(&fmtctx, filename.c_str(), 0, 0) < 0) {
+        cout << "Could not open input file " << filename << endl;
+        return InvalidRet;
+    }
+
+    if (avformat_find_stream_info(fmtctx, 0) < 0) {
+        cout << "Failed to retrieve input stream information in file " << filename << endl;
+        return InvalidRet;
+    }
+
+    unsigned int numOfStreams = fmtctx->nb_streams;
+    if (numOfStreams != 1) {
+        cout << "audio input file must has exactly one stream: " << filename << " " << numOfStreams << endl;
+        return InvalidRet;
+    }
+
+    if (fmtctx->streams) {
+        AVStream* stream = fmtctx->streams[0];
+        if (stream && stream->codecpar && stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            return make_pair(FFmpegAVFormatContext(fmtctx), 0);
+        }
+    }
+    return InvalidRet;
+}
+
+int writeFrame_(AVFormatContext *ic, int inStreamIdx, AVFormatContext *oc, int outStreamIdx, int64_t& pts)
 {
     int numOfFramesWritten = 0;
     AVPacket avPkt;
@@ -125,17 +167,15 @@ int writeFrame_(AVFormatContext *ic, AVFormatContext *oc, int outStreamIdx, int6
 
     AVStream *in_stream, *out_stream;
 
-    auto ret = av_read_frame(ic, pkt);
-    if (ret < 0) {
-        cout << "error or end of file." << endl;
-        return numOfFramesWritten;
-    }
+    do {
+        auto ret = av_read_frame(ic, pkt);
+        if (ret < 0) {
+            cout << "error or end of file." << endl;
+            return numOfFramesWritten;
+        }
+    } while (pkt->stream_index != inStreamIdx);
 
-    in_stream  = ic->streams[0];
-    if (pkt->stream_index != 0) {
-        cout << "invalid packet in input stream." << endl;
-        return -1;
-    }
+    in_stream  = ic->streams[inStreamIdx];
 
     pkt->stream_index = outStreamIdx;
     out_stream = oc->streams[outStreamIdx];
@@ -150,7 +190,7 @@ int writeFrame_(AVFormatContext *ic, AVFormatContext *oc, int outStreamIdx, int6
     pts = pkt->pts;
     cout << "write " << numOfFramesWritten << " frame(s) to stream " << outStreamIdx << " " << pts << endl;
 
-    ret = av_interleaved_write_frame(oc, pkt);
+    auto ret = av_interleaved_write_frame(oc, pkt);
     if (ret < 0) {
         cout << "Error muxing packet." << endl;
         return -1;
@@ -183,32 +223,24 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
 
     FFmpegAVFormatContext inVideoFmtCtx;
     FFmpegAVFormatContext inAudioFmtCtx;
+    int inVideoStreamIdx = -1;
 
-    auto fmtctx_type = openMediaFile_(inputFilename1);
-    if (fmtctx_type.first) {
-        if (fmtctx_type.second == AVMEDIA_TYPE_VIDEO) {
-            inVideoFmtCtx = fmtctx_type.first;
-        }
-        else if (fmtctx_type.second == AVMEDIA_TYPE_AUDIO) {
-            inAudioFmtCtx = fmtctx_type.first;
-        }
-        else {
-            cout << "input file " << inputFilename1 << " has unsupport media type: " << av_get_media_type_string(fmtctx_type.second) << endl;
-            return 1;
-        }
+    auto fmtctx_idx = openVideoMediaFile_(inputFilename1);
+    if (fmtctx_idx.second >= 0 ) {
+        inVideoFmtCtx = fmtctx_idx.first;
+        inVideoStreamIdx = fmtctx_idx.second;
     }
-    fmtctx_type = openMediaFile_(inputFilename2);
-    if (fmtctx_type.first) {
-        if (fmtctx_type.second == AVMEDIA_TYPE_VIDEO) {
-            inVideoFmtCtx = fmtctx_type.first;
-        }
-        else if (fmtctx_type.second == AVMEDIA_TYPE_AUDIO) {
-            inAudioFmtCtx = fmtctx_type.first;
-        }
-        else {
-            cout << "input file " << inputFilename2 << " has unsupport media type: " << av_get_media_type_string(fmtctx_type.second) << endl;
-            return 1;
-        }
+    else {
+        cout << "input file " << inputFilename1 << " does not contais video stream." << endl;
+        return 1;
+    }
+    fmtctx_idx = openAudioMediaFile_(inputFilename2);
+    if (fmtctx_idx.second == 0) {
+        inAudioFmtCtx = fmtctx_idx.first;
+    }
+    else {
+        cout << "input file " << inputFilename2 << " must contain exactly one audio stream." << endl;
+        return 1;
     }
     if (!inVideoFmtCtx) {
         cout << "Cannot find video input." << endl;
@@ -225,7 +257,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
         cout << "Failed allocating output video stream." << endl;;
         return 1;
     }
-    if (avcodec_parameters_copy(outVideoStream->codecpar, inVideoFmtCtx->streams[0]->codecpar) < 0) {
+    if (avcodec_parameters_copy(outVideoStream->codecpar, inVideoFmtCtx->streams[inVideoStreamIdx]->codecpar) < 0) {
         cout << "Failed to copy video codec parameters." << endl;
         return 1;
     }
@@ -265,7 +297,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
         if (   !isVideoDone 
              && av_compare_ts(videoPts, outVideoStream->time_base, audioPts, outAudioStream->time_base) <= 0) {
             // write video
-            auto numOfFrameWritten = writeFrame_(inVideoFmtCtx, oc, outVideoStream->id, videoPts);
+            auto numOfFrameWritten = writeFrame_(inVideoFmtCtx, inVideoStreamIdx, oc, outVideoStream->id, videoPts);
             if (numOfFrameWritten == 0) {
                 isVideoDone = 1;
             }
@@ -275,7 +307,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
         }
         else if (!isAudioDone) {
             // write audio
-            auto numOfFrameWritten = writeFrame_(inAudioFmtCtx, oc, outAudioStream->id, audioPts);
+            auto numOfFrameWritten = writeFrame_(inAudioFmtCtx, 0, oc, outAudioStream->id, audioPts);
             if (numOfFrameWritten == 0) {
                 isAudioDone = 1;
             }
