@@ -11,7 +11,7 @@
 #include "audioEnvelope.h"
 
 #include "audioStreamInfo.h"
-#include "kdenlive_debug.h"
+//#include "kdenlive_debug.h"
 #include <QImage>
 #include <QTime>
 #include <QtConcurrent>
@@ -38,7 +38,7 @@ AudioEnvelope::AudioEnvelope(const QString &url, Mlt::Producer *producer, int of
     m_producer = new Mlt::Producer(*(producer->profile()), path.toUtf8().constData());
     connect(&m_watcher, &QFutureWatcherBase::finished, this, &AudioEnvelope::slotProcessEnveloppe);
     if (!m_producer || !m_producer->is_valid()) {
-        qCDebug(KDENLIVE_LOG) << "// Cannot create envelope for producer: " << path;
+        //qCDebug(KDENLIVE_LOG) << "// Cannot create envelope for producer: " << path;
     }
     m_info = new AudioInfo(m_producer);
 
@@ -74,7 +74,7 @@ void AudioEnvelope::loadEnvelope()
 {
     Q_ASSERT(m_envelope == nullptr);
 
-    qCDebug(KDENLIVE_LOG) << "Loading envelope ...";
+    //qCDebug(KDENLIVE_LOG) << "Loading envelope ...";
 
     int samplingRate = m_info->info(0)->samplingRate();
     mlt_audio_format format_s16 = mlt_audio_s16;
@@ -118,8 +118,8 @@ void AudioEnvelope::loadEnvelope()
         }
     }
     m_envelopeMean /= m_envelopeSize;
-    qCDebug(KDENLIVE_LOG) << "Calculating the envelope (" << m_envelopeSize << " frames) took "
-                          << t.elapsed() << " ms.";
+    //qCDebug(KDENLIVE_LOG) << "Calculating the envelope (" << m_envelopeSize << " frames) took "
+    //                      << t.elapsed() << " ms.";
 }
 
 int AudioEnvelope::track() const
@@ -193,14 +193,14 @@ QImage AudioEnvelope::drawEnvelope()
 void AudioEnvelope::dumpInfo() const
 {
     if (m_envelope == nullptr) {
-        qCDebug(KDENLIVE_LOG) << "Envelope not generated, no information available.";
+        //qCDebug(KDENLIVE_LOG) << "Envelope not generated, no information available.";
     } else {
-        qCDebug(KDENLIVE_LOG) << "Envelope info"
-                              << "\n* size = " << m_envelopeSize
-                              << "\n* max = " << m_envelopeMax
-                              << "\n* µ = " << m_envelopeMean;
+        //qCDebug(KDENLIVE_LOG) << "Envelope info"
+        //                      << "\n* size = " << m_envelopeSize
+        //                      << "\n* max = " << m_envelopeMax
+        //                      << "\n* µ = " << m_envelopeMean;
         if (m_envelopeStdDevCalculated) {
-            qCDebug(KDENLIVE_LOG) << "* s = " << m_envelopeStdDev;
+            //qCDebug(KDENLIVE_LOG) << "* s = " << m_envelopeStdDev;
         }
     }
 }

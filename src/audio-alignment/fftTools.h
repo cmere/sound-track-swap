@@ -13,8 +13,10 @@
 
 #include <QVector>
 #include <QHash>
-#include "../../definitions.h"
-#include "../external/kiss_fft/tools/kiss_fftr.h"
+//#include "../../definitions.h"
+#include "external/kiss_fft/tools/kiss_fftr.h"
+
+typedef QVector<qint16> audioShortVector;
 
 class FFTTools
 {

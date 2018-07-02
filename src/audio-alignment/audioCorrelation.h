@@ -13,8 +13,19 @@
 
 #include "audioCorrelationInfo.h"
 #include "audioEnvelope.h"
-#include "definitions.h"
+//#include "definitions.h"
 #include <QList>
+
+
+
+enum MessageType {
+    DefaultMessage,
+    ProcessingJobMessage,
+    OperationCompletedMessage,
+    InformationMessage,
+    ErrorMessage,
+    MltError
+};
 
 /**
   This class does the correlation between two tracks

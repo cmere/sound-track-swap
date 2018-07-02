@@ -11,8 +11,8 @@ the Free Software Foundation, either version 3 of the License, or
 #include "audioCorrelation.h"
 #include "fftCorrelation.h"
 
-#include "klocalizedstring.h"
-#include "kdenlive_debug.h"
+//#include "klocalizedstring.h"
+//#include "kdenlive_debug.h"
 #include <QTime>
 #include <cmath>
 #include <iostream>
@@ -34,12 +34,12 @@ AudioCorrelation::~AudioCorrelation()
         delete info;
     }
 
-    qCDebug(KDENLIVE_LOG) << "Envelope deleted.";
+    //qCDebug(KDENLIVE_LOG) << "Envelope deleted.";
 }
 
 void AudioCorrelation::slotAnnounceEnvelope()
 {
-    emit displayMessage(i18n("Audio analysis finished"), OperationCompletedMessage);
+    emit displayMessage("Audio analysis finished", OperationCompletedMessage);
 }
 
 void AudioCorrelation::addChild(AudioEnvelope *envelope)
@@ -155,7 +155,7 @@ void AudioCorrelation::correlate(const qint64 *envMain, int sizeMain,
         }
 
     }
-    qCDebug(KDENLIVE_LOG) << "Correlation calculated. Time taken: " << t.elapsed() << " ms.";
+    //qCDebug(KDENLIVE_LOG) << "Correlation calculated. Time taken: " << t.elapsed() << " ms.";
 
     if (out_max != nullptr) {
         *out_max = max;
