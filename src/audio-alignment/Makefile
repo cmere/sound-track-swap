@@ -15,10 +15,10 @@ CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 CXXFLAGS      = -m64 -pipe -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES) -std=c++11
-INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I. -I. -Iexternal/kiss_fft/tools -Iexternal/kiss_fft -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtConcurrent -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/home/haxu/github/mlt/src
+INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I. -I. -Iexternal/kiss_fft/tools -Iexternal/kiss_fft -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtConcurrent -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. 
 LINK          = g++
 LFLAGS        = -m64 -Wl,-O1
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/home/haxu/github/mlt/src/framework -L/home/haxu/github/mlt/src/mlt++ -lQt5Gui -lQt5Core -lGL -lpthread -lmlt -lmlt++
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lQt5Gui -lQt5Core -lGL -lpthread -lmlt -lmlt++
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
@@ -52,7 +52,6 @@ SOURCES       = audioCorrelation.cpp \
 		audioStreamInfo.cpp \
 		fftCorrelation.cpp \
 		fftTools.cpp \
-		main.c \
 		external/kiss_fft/kiss_fft.c \
 		external/kiss_fft/tools/kiss_fftr.c moc_audioCorrelation.cpp \
 		moc_audioEnvelope.cpp
@@ -63,7 +62,6 @@ OBJECTS       = audioCorrelation.o \
 		audioStreamInfo.o \
 		fftCorrelation.o \
 		fftTools.o \
-		main.o \
 		kiss_fft.o \
 		kiss_fftr.o \
 		moc_audioCorrelation.o \
@@ -128,12 +126,11 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		audioStreamInfo.cpp \
 		fftCorrelation.cpp \
 		fftTools.cpp \
-		main.c \
 		external/kiss_fft/kiss_fft.c \
 		external/kiss_fft/tools/kiss_fftr.c
 QMAKE_TARGET  = audio-alignment
 DESTDIR       = #avoid trailing-slash linebreak
-TARGET        = audio-alignment
+TARGET        = libaudio-alignment.a
 
 
 first: all
@@ -161,7 +158,8 @@ first: all
 all: Makefile $(TARGET)
 
 $(TARGET):  $(OBJECTS)  
-	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
+	$(AR) $(TARGET) $(OBJECTS) $(OBJCOMP)
+	#$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
 Makefile: audio-alignment.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64/qmake.conf /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
@@ -283,7 +281,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/audio-alignment1.0.0 || mkdir -p .tmp/audio-alignment1.0.0
-	$(COPY_FILE) --parents $(DIST) .tmp/audio-alignment1.0.0/ && $(COPY_FILE) --parents audioCorrelation.h audioCorrelationInfo.h audioEnvelope.h audioInfo.h audioStreamInfo.h fftCorrelation.h fftTools.h external/kiss_fft/kiss_fft.h external/kiss_fft/tools/kiss_fftr.h .tmp/audio-alignment1.0.0/ && $(COPY_FILE) --parents audioCorrelation.cpp audioCorrelationInfo.cpp audioEnvelope.cpp audioInfo.cpp audioStreamInfo.cpp fftCorrelation.cpp fftTools.cpp main.c external/kiss_fft/kiss_fft.c external/kiss_fft/tools/kiss_fftr.c .tmp/audio-alignment1.0.0/ && (cd `dirname .tmp/audio-alignment1.0.0` && $(TAR) audio-alignment1.0.0.tar audio-alignment1.0.0 && $(COMPRESS) audio-alignment1.0.0.tar) && $(MOVE) `dirname .tmp/audio-alignment1.0.0`/audio-alignment1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/audio-alignment1.0.0
+	$(COPY_FILE) --parents $(DIST) .tmp/audio-alignment1.0.0/ && $(COPY_FILE) --parents audioCorrelation.h audioCorrelationInfo.h audioEnvelope.h audioInfo.h audioStreamInfo.h fftCorrelation.h fftTools.h external/kiss_fft/kiss_fft.h external/kiss_fft/tools/kiss_fftr.h .tmp/audio-alignment1.0.0/ && $(COPY_FILE) --parents audioCorrelation.cpp audioCorrelationInfo.cpp audioEnvelope.cpp audioInfo.cpp audioStreamInfo.cpp fftCorrelation.cpp fftTools.cpp external/kiss_fft/kiss_fft.c external/kiss_fft/tools/kiss_fftr.c .tmp/audio-alignment1.0.0/ && (cd `dirname .tmp/audio-alignment1.0.0` && $(TAR) audio-alignment1.0.0.tar audio-alignment1.0.0 && $(COMPRESS) audio-alignment1.0.0.tar) && $(MOVE) `dirname .tmp/audio-alignment1.0.0`/audio-alignment1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/audio-alignment1.0.0
 
 
 clean:compiler_clean 
@@ -363,8 +361,6 @@ fftTools.o: fftTools.cpp fftTools.h \
 		external/kiss_fft/kiss_fft.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fftTools.o fftTools.cpp
 
-main.o: main.c 
-	$(CC) -c $(CFLAGS) $(INCPATH) -o main.o main.c
 
 kiss_fft.o: external/kiss_fft/kiss_fft.c external/kiss_fft/_kiss_fft_guts.h \
 		external/kiss_fft/kiss_fft.h
