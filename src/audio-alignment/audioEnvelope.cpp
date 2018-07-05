@@ -16,6 +16,9 @@
 #include <QTime>
 #include <QtConcurrent>
 #include <cmath>
+#include <iostream>
+
+using namespace std;
 
 AudioEnvelope::AudioEnvelope(const QString &url, Mlt::Producer *producer, int offset, int length, int track, int startPos) :
     m_envelope(nullptr),
@@ -38,7 +41,7 @@ AudioEnvelope::AudioEnvelope(const QString &url, Mlt::Producer *producer, int of
     m_producer = new Mlt::Producer(*(producer->profile()), path.toUtf8().constData());
     connect(&m_watcher, &QFutureWatcherBase::finished, this, &AudioEnvelope::slotProcessEnveloppe);
     if (!m_producer || !m_producer->is_valid()) {
-        //qCDebug(KDENLIVE_LOG) << "// Cannot create envelope for producer: " << path;
+        cout << "// Cannot create envelope for producer: " << path.toUtf8().constData() << endl;
     }
     m_info = new AudioInfo(m_producer);
 
@@ -74,7 +77,7 @@ void AudioEnvelope::loadEnvelope()
 {
     Q_ASSERT(m_envelope == nullptr);
 
-    //qCDebug(KDENLIVE_LOG) << "Loading envelope ...";
+    cout << "Loading envelope ..." << endl;
 
     int samplingRate = m_info->info(0)->samplingRate();
     mlt_audio_format format_s16 = mlt_audio_s16;
@@ -107,8 +110,7 @@ void AudioEnvelope::loadEnvelope()
             m_envelopeMax = sum;
         }
 
-//        qCDebug(KDENLIVE_LOG) << position << '|' << m_producer->get_playtime()
-//                  << '-' << m_producer->get_in() << '+' << m_producer->get_out() << ' ';
+        cout << position << '|' << m_producer->get_playtime() << '-' << m_producer->get_in() << '+' << m_producer->get_out() << ' ' << endl;
 
         delete frame;
 
@@ -118,8 +120,8 @@ void AudioEnvelope::loadEnvelope()
         }
     }
     m_envelopeMean /= m_envelopeSize;
-    //qCDebug(KDENLIVE_LOG) << "Calculating the envelope (" << m_envelopeSize << " frames) took "
-    //                      << t.elapsed() << " ms.";
+    cout << "Calculating the envelope (" << m_envelopeSize << " frames) took "
+                          << t.elapsed() << " ms." << endl;
 }
 
 int AudioEnvelope::track() const

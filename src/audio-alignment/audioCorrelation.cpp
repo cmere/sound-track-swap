@@ -17,6 +17,8 @@ the Free Software Foundation, either version 3 of the License, or
 #include <cmath>
 #include <iostream>
 
+using namespace std;
+
 AudioCorrelation::AudioCorrelation(AudioEnvelope *mainTrackEnvelope) :
     m_mainTrackEnvelope(mainTrackEnvelope)
 {
@@ -34,7 +36,7 @@ AudioCorrelation::~AudioCorrelation()
         delete info;
     }
 
-    //qCDebug(KDENLIVE_LOG) << "Envelope deleted.";
+    std::cout << "Envelope deleted." << endl;
 }
 
 void AudioCorrelation::slotAnnounceEnvelope()
@@ -46,6 +48,7 @@ void AudioCorrelation::addChild(AudioEnvelope *envelope)
 {
     envelope->normalizeEnvelope();
     connect(envelope, &AudioEnvelope::envelopeReady, this, &AudioCorrelation::slotProcessChild);
+    slotProcessChild(envelope);
 }
 
 void AudioCorrelation::slotProcessChild(AudioEnvelope *envelope)
@@ -78,6 +81,8 @@ void AudioCorrelation::slotProcessChild(AudioEnvelope *envelope)
     Q_ASSERT(m_correlations.size() == m_children.size());
     int index = m_children.indexOf(envelope);
     int shift = getShift(index);
+
+    cout << "AudioCorrelation::slotProcessChild: index=" << index << " shift=" << shift << endl;
     emit gotAudioAlignData(envelope->track(), envelope->startPos(), shift);
 }
 

@@ -159,7 +159,7 @@ openAudioMediaFile_(const string& filename)
     return InvalidRet;
 }
 
-int writeFrame_(AVFormatContext *ic, int inStreamIdx, AVFormatContext *oc, int outStreamIdx, int64_t& pts)
+int writeFrame_(AVFormatContext *ic, int inStreamIdx, AVFormatContext *oc, int outStreamIdx, int64_t& pts, bool isAudio = false)
 {
     int numOfFramesWritten = 0;
     AVPacket avPkt;
@@ -188,6 +188,11 @@ int writeFrame_(AVFormatContext *ic, int inStreamIdx, AVFormatContext *oc, int o
 
     ++numOfFramesWritten;
     pts = pkt->pts;
+    if (isAudio) {
+        double tb = out_stream->time_base.num * 1.0 / out_stream->time_base.den;
+        pkt->pts -= 82 / 25.0 / tb;
+        pkt->dts -= 82 / 25.0 / tb;
+    }
     cout << "write " << numOfFramesWritten << " frame(s) to stream " << outStreamIdx << " " << pts << endl;
 
     auto ret = av_interleaved_write_frame(oc, pkt);
@@ -307,7 +312,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
         }
         else if (!isAudioDone) {
             // write audio
-            auto numOfFrameWritten = writeFrame_(inAudioFmtCtx, 0, oc, outAudioStream->id, audioPts);
+            auto numOfFrameWritten = writeFrame_(inAudioFmtCtx, 0, oc, outAudioStream->id, audioPts, true);
             if (numOfFrameWritten == 0) {
                 isAudioDone = 1;
             }

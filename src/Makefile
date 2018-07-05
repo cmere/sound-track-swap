@@ -11,7 +11,7 @@ SOURCES := $(wildcard $(SOURCE_DIR)/*.cpp)
 OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 OBJECTS := $(patsubst $(SOURCE_DIR)%,$(BIN_DIR)%,$(OBJECTS))
 
-INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I. -I. -Iexternal/kiss_fft/tools -Iexternal/kiss_fft -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtConcurrent -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. 
+INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I. -I. -Iexternal/kiss_fft/tools -Iexternal/kiss_fft -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtConcurrent -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/local/include/mlt -I. 
 
 CXXFLAGS := -fPIC
 
