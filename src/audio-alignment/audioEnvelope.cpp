@@ -50,6 +50,8 @@ AudioEnvelope::AudioEnvelope(const QString &url, Mlt::Producer *producer, int of
         Q_ASSERT(m_length + m_offset <= m_envelopeSize);
         m_envelopeSize = m_length;
     }
+    cout << "producer length: " << producer->get_length() << " " << m_envelopeSize << endl;
+    cout << "producer fps: " << producer->get_fps() << endl;
 }
 
 AudioEnvelope::~AudioEnvelope()
