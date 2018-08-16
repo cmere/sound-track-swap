@@ -35,6 +35,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "FFmpegClasses.h"
+
 extern "C" {
 
 #include <libavutil/mathematics.h>
@@ -47,49 +49,10 @@ using namespace std;
 
 namespace Swaper {
 
-template<typename T>
-class FFmpegClass {
-    public:
-        FFmpegClass() { }
-
-        FFmpegClass(T* t);
-        //{
-        //    static_assert(false, "Need template specialization in constructor ");
-        //}
-
-        operator T*() const { return t_.get(); }
-        T* operator->() const { return t_.get(); }
-
-    private:
-        std::shared_ptr<T> t_;
-};
-
-typedef FFmpegClass<AVFormatContext> FFmpegAVFormatContext;
-typedef FFmpegClass<AVStream> FFmpegAVStream;
-typedef FFmpegClass<AVCodecContext> FFmpegAVCodecContext;
-typedef FFmpegClass<AVPacket> FFmpegAVPacket;
-
-template<>
-FFmpegClass<AVFormatContext>::FFmpegClass(AVFormatContext* t) {
-    t_.reset(t, [](AVFormatContext* p) { avformat_free_context(p); });
-}
-template<>
-FFmpegClass<AVStream>::FFmpegClass(AVStream* t) {
-    t_.reset(t, [](AVStream* p) { });  // Deleter do nothing.
-}
-template<>
-FFmpegClass<AVCodecContext>::FFmpegClass(AVCodecContext* t) {
-    t_.reset(t, [](AVCodecContext* p) { avcodec_free_context(&p); });
-}
-template<>
-FFmpegClass<AVPacket>::FFmpegClass(AVPacket* t) {
-    t_.reset(t, [](AVPacket* p) { av_packet_unref(p); });
-}
-
-pair<FFmpegAVFormatContext, int>
+pair<FFmpegAVFormatContextPtr, int>
 openVideoMediaFile_(const string& filename)
 {
-    static auto InvalidRet = make_pair(FFmpegAVFormatContext(), -1);
+    static auto InvalidRet = make_pair(FFmpegAVFormatContextPtr(), -1);
 
     AVFormatContext* fmtctx = nullptr;
     if (avformat_open_input(&fmtctx, filename.c_str(), 0, 0) < 0) {
@@ -108,7 +71,7 @@ openVideoMediaFile_(const string& filename)
             AVStream* stream = fmtctx->streams[i];
             if (stream && stream->codecpar) {
                 if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO ) {
-                    return make_pair(FFmpegAVFormatContext(fmtctx), i);
+                    return make_pair(FFmpegAVFormatContextPtr(fmtctx), i);
                 }
             }
         }
@@ -122,16 +85,16 @@ openVideoMediaFile_(const string& filename)
     if (fmtctx->streams) {
         AVStream* stream = fmtctx->streams[0];
         if (stream && stream->codecpar) {
-            return make_pair(FFmpegAVFormatContext(fmtctx), stream->codecpar->codec_type);
+            return make_pair(FFmpegAVFormatContextPtr(fmtctx), stream->codecpar->codec_type);
         }
     }
     return InvalidRet;
 }
 
-pair<FFmpegAVFormatContext, int>
+pair<FFmpegAVFormatContextPtr, int>
 openAudioMediaFile_(const string& filename)
 {
-    static auto InvalidRet = make_pair(FFmpegAVFormatContext(), -1);
+    static auto InvalidRet = make_pair(FFmpegAVFormatContextPtr(), -1);
 
     AVFormatContext* fmtctx = nullptr;
     if (avformat_open_input(&fmtctx, filename.c_str(), 0, 0) < 0) {
@@ -153,7 +116,7 @@ openAudioMediaFile_(const string& filename)
     if (fmtctx->streams) {
         AVStream* stream = fmtctx->streams[0];
         if (stream && stream->codecpar && stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            return make_pair(FFmpegAVFormatContext(fmtctx), 0);
+            return make_pair(FFmpegAVFormatContextPtr(fmtctx), 0);
         }
     }
     return InvalidRet;
@@ -163,7 +126,7 @@ int writeFrame_(AVFormatContext *ic, int inStreamIdx, AVFormatContext *oc, int o
 {
     int numOfFramesWritten = 0;
     AVPacket avPkt;
-    FFmpegAVPacket pkt(&avPkt);
+    FFmpegAVPacketPtr pkt(&avPkt);
 
     AVStream *in_stream, *out_stream;
 
@@ -223,11 +186,11 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
     if (!poc)
         return 1;
 
-    FFmpegAVFormatContext oc(poc);
+    FFmpegAVFormatContextPtr oc(poc);
     fmt = oc->oformat;
 
-    FFmpegAVFormatContext inVideoFmtCtx;
-    FFmpegAVFormatContext inAudioFmtCtx;
+    FFmpegAVFormatContextPtr inVideoFmtCtx;
+    FFmpegAVFormatContextPtr inAudioFmtCtx;
     int inVideoStreamIdx = -1;
 
     auto fmtctx_idx = openVideoMediaFile_(inputFilename1);
@@ -257,7 +220,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
     }
 
     // create streams
-    FFmpegAVStream outVideoStream(avformat_new_stream(oc, nullptr));
+    FFmpegAVStreamPtr outVideoStream(avformat_new_stream(oc, nullptr));
     if (!outVideoStream) {
         cout << "Failed allocating output video stream." << endl;;
         return 1;
@@ -269,7 +232,7 @@ FFmpegMuxer::mux(const string& inputFilename1, const string& inputFilename2, con
     outVideoStream->id = oc->nb_streams - 1;
     outVideoStream->codecpar->codec_tag = 0;
 
-    FFmpegAVStream outAudioStream(avformat_new_stream(oc, nullptr));
+    FFmpegAVStreamPtr outAudioStream(avformat_new_stream(oc, nullptr));
     if (!outAudioStream) {
         cout << "Failed allocating output audio stream." << endl;;
         return 1;

@@ -17,10 +17,6 @@ INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I. -I. -Ie
 
 CXXFLAGS := -fPIC
 
-AUDIO_ALIGNMENT_LIB := audio-alignment
-
-.PHONY: $(AUDIO_ALIGNMENT_LIB)
-
 FFMPEG_LIBS :=  -lavformat                        \
                 -lavfilter                        \
                 -lavcodec                         \
@@ -32,14 +28,10 @@ BOOST_LIBS := -lboost_system -lboost_filesystem
 
 CXXFLAGS := -std=c++11 -D__STDC_CONSTANT_MACROS -Wall -g $(CXXFLAGS)
 
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lQt5Gui -lQt5Core -lGL -lpthread -lmlt -lmlt++
+LIBS := -L/usr/X11R6/lib64 -lpthread 
 
-$(SOUND_TRACK_SWAP): $(OBJECTS) ${AUDIO_ALIGNMENT_LIB}
-	$(CXX) -o $@ $(CXXFLAGS) $(OBJECTS) -L $(LIB_DIR) -l$(AUDIO_ALIGNMENT_LIB) $(FFMPEG_LIBS) $(BOOST_LIBS) $(LIBS) 
+$(SOUND_TRACK_SWAP): $(OBJECTS) 
+	$(CXX) -o $@ $(CXXFLAGS) $(OBJECTS) -L $(LIB_DIR) $(FFMPEG_LIBS) $(BOOST_LIBS) $(LIBS) 
 
 $(OBJECT_DIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCPATH) -c $(CXXFLAGS) $^ -o $@
-
-${AUDIO_ALIGNMENT_LIB}:
-	$(MAKE) --directory=$@
-
