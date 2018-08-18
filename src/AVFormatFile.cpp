@@ -8,27 +8,6 @@ namespace {
 
 using namespace Swaper;
 
-bool
-readAudioStreamIndexes(AVFormatContext* fmtCtx, list<unsigned int>& indexes) 
-{
-    if (!fmtCtx) {
-        return false;
-    }
-
-    int ret = avformat_find_stream_info(fmtCtx, nullptr);
-    if (ret < 0) {
-        cout << "failed to find stream info " << ret << endl;
-        return false;
-    }
-    for (unsigned int i = 0; i < fmtCtx->nb_streams; ++i) {
-        AVStream* stream = fmtCtx->streams[i];
-        if (stream && stream->codecpar && stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            cout << "audio stream index " << i << endl;
-            indexes.push_back(i);
-        }
-    }
-    return true;
-}
 
 }  // namespace anonymous
 
@@ -54,11 +33,41 @@ AVFormatFile::openFile(const string& filename)
         return false;
     }
 
-    if (!readAudioStreamIndexes(fmtCtx_, audioStreamIndexes_)) {
+    if (!readStreamInfo_()) {
         return false;
     }
 
     return true;
 }
 
+bool
+AVFormatFile::readStreamInfo_() 
+{
+    if (!fmtCtx_) {
+        return false;
+    }
+
+    int ret = avformat_find_stream_info(fmtCtx_, nullptr);
+    if (ret < 0) {
+        cout << "failed to find stream info " << ret << endl;
+        return false;
+    }
+    for (unsigned int i = 0; i < fmtCtx_->nb_streams; ++i) {
+        AVStream* stream = fmtCtx_->streams[i];
+        if (stream && stream->codecpar) {
+            if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                audioStreamIndexes_.push_back(i);
+            }
+            else if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+                videoStreamIndexes_.push_back(i);
+            }
+            else {
+                cout << "non audio/video stream: " << i << endl;
+                otherStreamIndexes_.push_back(i);
+            }
+            dataByIndex_[i].reset(new AVRawData(stream));
+        }
+    }
+    return true;
+}
 }  // namespace Swaper

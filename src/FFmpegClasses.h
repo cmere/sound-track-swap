@@ -33,11 +33,13 @@ template<> FFmpegClass<AVFormatContext>::FFmpegClass(AVFormatContext* t);
 template<> FFmpegClass<AVStream>::FFmpegClass(AVStream* t);
 template<> FFmpegClass<AVCodecContext>::FFmpegClass(AVCodecContext* t);
 template<> FFmpegClass<AVPacket>::FFmpegClass(AVPacket* t); 
+template<> FFmpegClass<AVCodecParameters>::FFmpegClass(AVCodecParameters* t); 
 
 typedef FFmpegClass<AVFormatContext> FFmpegAVFormatContextPtr;
 typedef FFmpegClass<AVStream> FFmpegAVStreamPtr;
 typedef FFmpegClass<AVCodecContext> FFmpegAVCodecContextPtr;
 typedef FFmpegClass<AVPacket> FFmpegAVPacketPtr;
+typedef FFmpegClass<AVCodecParameters> FFmpegAVCodecParametersPtr;
 
 }
 
