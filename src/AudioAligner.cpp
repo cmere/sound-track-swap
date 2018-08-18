@@ -1,5 +1,5 @@
-#include "AudioAligner.h"
-#include "AVFormatFile.h"
+#include "AudioAligner.hpp"
+#include "AVFormatFile.hpp"
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include "AVFormatFile.h"
+#include "AVFormatFile.hpp"
 
 #include <iostream>
 
@@ -70,4 +70,5 @@ AVFormatFile::readStreamInfo_()
     }
     return true;
 }
+
 }  // namespace Swaper

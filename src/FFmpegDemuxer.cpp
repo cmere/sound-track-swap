@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-#include "FFmpegDemuxer.h"
+#include "FFmpegDemuxer.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>

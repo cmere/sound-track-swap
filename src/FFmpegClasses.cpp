@@ -1,4 +1,4 @@
-#include "FFmpegClasses.h"
+#include "FFmpegClasses.hpp"
 #include <iostream>
 
 using namespace std;

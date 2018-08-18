@@ -1,8 +1,8 @@
+#include "FFmpegDemuxer.hpp"
+#include "FFmpegMuxer.hpp"
+#include "AudioAligner.hpp"
 #include <iostream>
 #include <libgen.h>
-#include "FFmpegDemuxer.h"
-#include "FFmpegMuxer.h"
-#include "AudioAligner.h"
 
 using namespace std;
 using namespace Swaper;

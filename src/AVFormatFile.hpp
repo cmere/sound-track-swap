@@ -1,8 +1,8 @@
 #ifndef SWAPER_AVFORMATFILE_H
 #define SWAPER_AVFORMATFILE_H
 
-#include "FFmpegClasses.h"
-#include "AVRawData.h"
+#include "FFmpegClasses.hpp"
+#include "AVRawData.hpp"
 #include <list>
 #include <map>
 #include <string>

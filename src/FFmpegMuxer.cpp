@@ -21,7 +21,8 @@
  */
 
 
-#include "FFmpegMuxer.h"
+#include "FFmpegMuxer.hpp"
+#include "FFmpegClasses.hpp"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -35,7 +36,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "FFmpegClasses.h"
 
 extern "C" {
 

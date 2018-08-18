@@ -1,4 +1,4 @@
-#include "AVRawData.h"
+#include "AVRawData.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -28,6 +28,7 @@ estimateSize_(const FFmpegAVStreamPtr& stream)
             cout << av_q2d(timebase) << " " << duration << " " << sampleRate << " " << channels << " "<< bytesPerSample << " " << ret << endl;
         }
         else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            cout << "TODO: video stream" << endl;
         }
         else {
             cout << "not AV stream " << av_get_media_type_string(codecpar->codec_type) << endl;

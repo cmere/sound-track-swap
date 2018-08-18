@@ -1,7 +1,7 @@
 #ifndef SWAPER_AVRAWDATA_H
 #define SWAPER_AVRAWDATA_H
 
-#include "FFmpegClasses.h"
+#include "FFmpegClasses.hpp"
 #include <cstdint>
 #include <list>
 #include <memory>
