@@ -52,7 +52,10 @@ AVFormatFile::readStreamInfo_()
         cout << "failed to find stream info " << ret << endl;
         return false;
     }
-    for (unsigned int i = 0; i < fmtCtx_->nb_streams; ++i) {
+    auto numOfStreams = fmtCtx_->nb_streams;
+    data_.resize(numOfStreams);
+    codecContexts_.resize(numOfStreams);
+    for (unsigned int i = 0; i < numOfStreams; ++i) {
         AVStream* stream = fmtCtx_->streams[i];
         if (stream && stream->codecpar) {
             if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -65,10 +68,80 @@ AVFormatFile::readStreamInfo_()
                 cout << "non audio/video stream: " << i << endl;
                 otherStreamIndexes_.push_back(i);
             }
-            dataByIndex_[i].reset(new AVRawData(stream));
+
+            data_[i] = make_shared<AVRawData>(stream);
+            if (auto decoder = avcodec_find_decoder(stream->codecpar->codec_id)) {
+                codecContexts_[i] = FFmpegAVCodecContextPtr(avcodec_alloc_context3(decoder));
+                if (avcodec_open2(codecContexts_[i], decoder, nullptr) < 0) {
+                    cout << "error in open code context for stream index " << i << endl;
+                }
+            }
         }
     }
     return true;
+}
+
+void
+AVFormatFile::readAudioData()
+{
+    if (!fmtCtx_) {
+        return;
+    }
+    for (const int i : audioStreamIndexes_) {
+        readStream_(i);
+    }
+}
+
+void
+AVFormatFile::readStream_(int index)
+{
+    auto codecContext = codecContexts_[index];
+    if (!codecContext) {
+        cout << "failed to read stream due to invalid code context." << endl;
+        return;
+    }
+
+    AVStream* stream = fmtCtx_->streams[index];
+    if (stream) {
+        int numOfPackets = 0, numOfFrames = 0;
+        
+        while (true) {
+            FFmpegAVPacketPtr packet(new AVPacket);
+            if (av_read_frame(fmtCtx_, packet) < 0) {
+                break;  // eof or fail
+            }
+
+            if (packet->stream_index != index) {
+                continue;
+            }
+            ++numOfPackets;
+
+            int ret = avcodec_send_packet(codecContext, packet);
+            if (ret < 0) {
+                cout << "failed to send packet to decoder." << ret << endl;
+                break;
+            }
+
+            AVFrame* frame = av_frame_alloc();
+            while (ret == 0) {
+                ret = avcodec_receive_frame(codecContext, frame);
+                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                    break;
+                }
+                else if (ret < 0){ 
+                    cout << "failed to receive frame from decoder. " << ret << endl;
+                    break;
+                }
+                ++numOfFrames;
+                for (int channel = 0; channel < frame->channels; ++channel) {
+                    AVBufferRef* buf = frame->buf[channel];
+                    data_[i].appendData(buf->data, buf->size);
+                }
+            }
+            av_frame_free(&frame);
+        }
+        cout << "stream " << index << " read " << numOfPackets << " packets " << numOfFrames << " frames." << endl;
+    }
 }
 
 }  // namespace Swaper

@@ -13,6 +13,8 @@ AudioAligner::align(const std::string& fromFilename, const std::string& toFilena
         return 0.0;
     }
 
+    fromFile.readAudioData();
+
     return 0.0;
 }
 

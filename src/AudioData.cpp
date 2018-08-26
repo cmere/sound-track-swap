@@ -1,4 +1,4 @@
-#include "AVRawData.hpp"
+#include "AudioData.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -27,11 +27,11 @@ estimateSize_(const FFmpegAVStreamPtr& stream)
             ret = ceil(duration * av_q2d(timebase) * sampleRate * bytesPerSample * channels);
             cout << av_q2d(timebase) << " " << duration << " " << sampleRate << " " << channels << " "<< bytesPerSample << " " << ret << endl;
         }
-        else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+        else if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             cout << "TODO: video stream" << endl;
         }
         else {
-            cout << "not AV stream " << av_get_media_type_string(codecpar->codec_type) << endl;
+            cout << "not AV stream: " << av_get_media_type_string(codecpar->codec_type) << endl;
         }
     }
 
@@ -42,7 +42,7 @@ estimateSize_(const FFmpegAVStreamPtr& stream)
 
 namespace Swaper {
 
-AVRawData::AVRawData(const FFmpegAVStreamPtr& stream) 
+AudioData::AudioData(const FFmpegAVStreamPtr& stream) 
 {
     if (!stream || !stream->codecpar) {
         return;
@@ -50,13 +50,18 @@ AVRawData::AVRawData(const FFmpegAVStreamPtr& stream)
 
     codecParams_ = FFmpegAVCodecParametersPtr(stream->codecpar);
 
-    capacity_ = estimateSize_(stream);
-    if (capacity_ <= 0) {
-        cout << "av raw data has invalid estimate size: " << capacity_ << endl;
+    bufLength_ = estimateSize_(stream);
+    if (bufLength_ <= 0) {
+        cout << "AV raw data has invalid estimate size: " << bufLength_ << endl;
         return;
     }
-    data_.reset(new char[capacity_]);
+    data_.reset(new uint8_t[bufLength_]);
 }
 
+unsigned int 
+AudioData::appendData(uint8_t* bytes, int size)
+{
+    return size;
+}
 
 } // namespace Swaper

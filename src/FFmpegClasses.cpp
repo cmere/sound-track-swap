@@ -25,13 +25,14 @@ FFmpegClass<AVCodecContext>::FFmpegClass(AVCodecContext* t)
 template<>
 FFmpegClass<AVPacket>::FFmpegClass(AVPacket* t)
 {
-    t_.reset(t, [](AVPacket* p) { cout << "AVPacket dtor" << endl; if (p) av_packet_unref(p); });
+    t_.reset(t, [](AVPacket* p) { if (p) av_packet_unref(p); });
 }
 
 template<> 
 FFmpegClass<AVCodecParameters>::FFmpegClass(AVCodecParameters* t)
 {
     AVCodecParameters* dp = avcodec_parameters_alloc();
+    cout << "AVCodecParameters ctor " << dp << endl;
     avcodec_parameters_copy(dp, t);
     t_.reset(dp, [](AVCodecParameters* p) { cout << "AVCodecParameters dtor" << endl; if (p) avcodec_parameters_free(&p); });
 }
