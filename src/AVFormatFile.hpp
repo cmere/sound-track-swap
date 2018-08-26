@@ -2,7 +2,7 @@
 #define SWAPER_AVFORMATFILE_H
 
 #include "FFmpegClasses.hpp"
-#include "AVRawData.hpp"
+#include "AudioData.hpp"
 #include <list>
 #include <string>
 #include <vector>
@@ -25,7 +25,8 @@ private:
     std::list<int> audioStreamIndexes_;
     std::list<int> videoStreamIndexes_;
     std::list<int> otherStreamIndexes_;
-    std::vector<std::shared_ptr<AVRawData>> data_;
+
+    std::vector<std::shared_ptr<AudioData>> data_;
     std::vector<FFmpegAVCodecContextPtr> codecContexts_;
 };
 

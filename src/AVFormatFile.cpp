@@ -69,7 +69,7 @@ AVFormatFile::readStreamInfo_()
                 otherStreamIndexes_.push_back(i);
             }
 
-            data_[i] = make_shared<AVRawData>(stream);
+            data_[i] = make_shared<AudioData>(stream);
             if (auto decoder = avcodec_find_decoder(stream->codecpar->codec_id)) {
                 codecContexts_[i] = FFmpegAVCodecContextPtr(avcodec_alloc_context3(decoder));
                 if (avcodec_open2(codecContexts_[i], decoder, nullptr) < 0) {
@@ -135,12 +135,12 @@ AVFormatFile::readStream_(int index)
                 ++numOfFrames;
                 for (int channel = 0; channel < frame->channels; ++channel) {
                     AVBufferRef* buf = frame->buf[channel];
-                    data_[i].appendData(buf->data, buf->size);
+                    data_[index]->appendData(buf->data, buf->size, channel);
                 }
             }
             av_frame_free(&frame);
         }
-        cout << "stream " << index << " read " << numOfPackets << " packets " << numOfFrames << " frames." << endl;
+        cout << "stream " << index << " read " << numOfPackets << " packets " << numOfFrames << " frames " << data_[index]->getSize() << " bytes."<< endl;
     }
 }
 

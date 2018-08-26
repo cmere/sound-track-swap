@@ -3,8 +3,8 @@
 
 #include "FFmpegClasses.hpp"
 #include <cstdint>
-#include <list>
 #include <memory>
+#include <vector>
 
 namespace Swaper {
 
@@ -17,15 +17,24 @@ class AudioData {
 public:
     AudioData(const FFmpegAVStreamPtr&);
 
-    unsigned int size() const { return size_; }
+    int getSize() const;
+    //int getBufferLength() const { return bufLength_; }
+
     FFmpegAVCodecParametersPtr getCodecParams() const { return codecParams_; }
 
-    unsigned int appendData(uint8_t* bytes, int size);
+    unsigned int appendData(uint8_t* bytes, int size, int channel);
 
 private:
-    unsigned int size_ = 0;
-    unsigned int bufLength_ = 0; 
-    std::shared_ptr<uint8_t> buf_;
+    int numOfChannels_() const;
+    int channelLength_() const;
+
+private:
+    unsigned int sizePerChannel_ = 0;
+    unsigned int bufLength_ = 0;    // estimate size * 1.1 (10% more)
+    std::shared_ptr<uint8_t> buf_;  // |channel 1 data|padding|channel 2 data|padding|channel 3 data|padding......
+    std::vector<uint8_t*> channelStart_;
+    std::vector<int> channelSize_;
+
     FFmpegAVCodecParametersPtr codecParams_;
 };
 
